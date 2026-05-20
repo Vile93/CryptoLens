@@ -3,23 +3,26 @@ import type { ChartHandle } from "@/components/Chart/Chart";
 import { useTradeStore } from "@/store/trade.store";
 import type { CandlestickData, MouseEventParams, Time } from "lightweight-charts";
 
-/**
- * Hook для синхронизации OHLC данных с движением мышки на графике
- * Обновляет OHLC при:
- * - Загрузке новых свечей
- * - Движении мышки над графиком
- */
 export const useOhlcSync = (
     mainRef: React.RefObject<ChartHandle | null>,
     candles: CandlestickData<Time>[],
 ) => {
     useEffect(() => {
         const chart = mainRef.current?.getChart();
-        const { changeOhlc } = useTradeStore.getState();
+        const {
+            market: { ohlc },
+            changeOhlc,
+        } = useTradeStore.getState();
         const series = mainRef.current?.getSeries()?.[0];
 
-        // Устанавливаем OHLC последней свечи при загрузке данных
-        if (series && candles.length > 0) {
+        if (
+            ohlc.open === 0 &&
+            ohlc.close === 0 &&
+            ohlc.high === 0 &&
+            ohlc.low === 0 &&
+            series &&
+            candles.length > 0
+        ) {
             const lastCandle = candles[candles.length - 1]!;
             changeOhlc({
                 open: lastCandle.open,
@@ -31,7 +34,6 @@ export const useOhlcSync = (
 
         if (!chart) return;
 
-        // Обновляем OHLC при движении мышки
         const handleMove = (param: MouseEventParams<Time>) => {
             if (!param.time) return;
 
@@ -51,7 +53,6 @@ export const useOhlcSync = (
 
         chart.subscribeCrosshairMove(handleMove);
 
-        // Очистка подписки
         return () => {
             chart.unsubscribeCrosshairMove(handleMove);
         };

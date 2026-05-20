@@ -11,7 +11,7 @@ const IndicatorCard = () => {
                 </h3>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-2 space-y-3 max-h-[calc(100vh-250px)]">
+            <div className="flex-1 overflow-y-auto p-2 space-y-3">
                 <div className="grid gap-2">
                     <MAConfig />
                     <MACDConfig />

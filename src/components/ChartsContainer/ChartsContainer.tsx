@@ -14,6 +14,8 @@ import { useRef } from "react";
 const ChartsContainer = () => {
     const indicators = useTradeStore((state) => state.indicators);
     const candles = useTradeStore((state) => state.candles);
+    const symbol = useTradeStore((state) => state.market.symbol);
+    const interval = useTradeStore((state) => state.market.interval);
     const { isLoading } = useBinanceCandles();
     const mainRef = useRef<ChartHandle>(null);
     const macdRef = useRef<ChartHandle>(null);
@@ -27,7 +29,7 @@ const ChartsContainer = () => {
     );
     const mfiData = calculateMFI(candles, indicators.mfi.period);
     useMovingAverage(mainRef, candles, indicators.ma.period, indicators.ma.enabled);
-    useChartsSync(mainRef, macdRef, mfiRef, [indicators]);
+    useChartsSync(mainRef, macdRef, mfiRef, [indicators, symbol, interval]);
     useOhlcSync(mainRef, candles);
 
     return (
@@ -37,7 +39,7 @@ const ChartsContainer = () => {
                 isLoading && "pointer-events-none opacity-50",
             )}
         >
-            <div className="flex-3 min-h-0 bg-card/20 rounded-lg border overflow-hidden">
+            <div className="flex-2 min-h-0 bg-card/20 rounded-lg border overflow-hidden">
                 <CryptoChart ref={mainRef} series={candles} />
             </div>
             {indicators.macd.enabled && (

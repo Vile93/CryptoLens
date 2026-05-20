@@ -94,9 +94,7 @@ export const useTradeStore = create<TradeStore>()(
                         updated.shift();
                     }
                 }
-
                 set(() => ({ candles: updated }));
-
                 get().updateCurrentPrice(candle.close);
             },
             updateCurrentPrice(price) {
@@ -257,7 +255,17 @@ export const useTradeStore = create<TradeStore>()(
         {
             name: "trade-store",
             partialize: (state) => ({
-                market: state.market,
+                market: {
+                    currentPrice: state.market.currentPrice,
+                    interval: state.market.interval,
+                    symbol: state.market.symbol,
+                    ohlc: {
+                        open: 0,
+                        high: 0,
+                        low: 0,
+                        close: 0,
+                    },
+                },
                 indicators: state.indicators,
             }),
         },
