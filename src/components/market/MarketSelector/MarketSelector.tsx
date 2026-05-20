@@ -1,17 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     Select,
-    SelectTrigger,
-    SelectValue,
     SelectContent,
     SelectGroup,
     SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTradeStore } from "@/store/trade.store";
 
 const MarketSelector = () => {
-    const { changeInterval } = useTradeStore();
+    const {
+        changeInterval,
+        market: { interval },
+    } = useTradeStore();
 
     return (
         <Card className="bg-muted/20 border-border/40 overflow-hidden">
@@ -53,7 +56,7 @@ const MarketSelector = () => {
                         Таймфрейм
                     </label>
                     <Tabs
-                        defaultValue="3600"
+                        defaultValue={String(interval)}
                         className="w-full"
                         onValueChange={(interval) => changeInterval(Number(interval))}
                     >

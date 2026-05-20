@@ -48,8 +48,15 @@ const Chart = forwardRef(
                 series.setData(data);
             });
             chart.timeScale().fitContent();
+            const resizeObserver = new ResizeObserver((entries) => {
+                if (entries.length === 0) return;
+                const { width, height } = entries[0].contentRect;
+                chart.resize(width, height);
+            });
+            resizeObserver.observe(containerRef.current);
             return () => {
                 chart.remove();
+                resizeObserver.disconnect();
             };
         }, []);
 

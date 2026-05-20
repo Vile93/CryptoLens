@@ -33,7 +33,7 @@ export interface MACDData {
     histogram: number;
 }
 
-// MACD data type
+// MACD data type - возвращает полный массив как candles с NaN для начальных значений
 export const calculateMACD = (
     candles: CandlestickData<Time>[],
     fast: number,
@@ -64,18 +64,13 @@ export const calculateMACD = (
         signalLine[firstValidMacdIdx + i] = validSignalLine[i];
     }
 
-    // Собираем финальный результат без сдвигов по времени
-    const result: MACDData[] = [];
-    for (let i = 0; i < candles.length; i++) {
-        if (!isNaN(macdLine[i]) && !isNaN(signalLine[i])) {
-            result.push({
-                time: candles[i].time,
-                macd: macdLine[i],
-                signal: signalLine[i],
-                histogram: macdLine[i] - signalLine[i],
-            });
-        }
-    }
+    // Собираем полный результат с NaN для начальных значений (все свечи получают запись)
+    const result: MACDData[] = candles.map((candle, i) => ({
+        time: candle.time,
+        macd: macdLine[i],
+        signal: signalLine[i],
+        histogram: !isNaN(macdLine[i]) && !isNaN(signalLine[i]) ? macdLine[i] - signalLine[i] : NaN,
+    }));
 
     return result;
 };
@@ -89,14 +84,17 @@ export const calculateMFI = (candles: CandlestickData<Time>[], period: number): 
     // Для расчета разницы цен внутри периода нам физически нужно минимум (period + 1) свечей
     if (candles.length < period + 1) return [];
 
-    const result: MFIData[] = [];
-
-    // 1. Предрасчитываем типичные цены и сырой денежный поток для ВСЕХ свечей сразу
+    // Предрасчитываем типичные цены и сырой денежный поток для ВСЕХ свечей
     const typicalPrices = candles.map((c) => (c.high + c.low + c.close) / 3);
     const rawMoneyFlows = candles.map((c, i) => typicalPrices[i] * ((c as any).volume ?? 1));
 
-    // 2. Идем по графику начиная с индекса, где уже накопился нужный период
-    for (let i = period; i < candles.length; i++) {
+    // Собираем полный результат: NaN для начальных, значения для остальных
+    const result: MFIData[] = candles.map((candle, i) => {
+        // Начиная с индекса period, считаем MFI
+        if (i < period) {
+            return { time: candle.time, value: NaN };
+        }
+
         let positiveFlow = 0;
         let negativeFlow = 0;
 
@@ -121,11 +119,25 @@ export const calculateMFI = (candles: CandlestickData<Time>[], period: number): 
             mfi = 100 - 100 / (1 + moneyFlowRatio);
         }
 
-        result.push({
-            time: candles[i].time,
-            value: mfi,
-        });
-    }
+        return { time: candle.time, value: mfi };
+    });
 
     return result;
+};
+
+// SMA: Simple Moving Average
+export const calculateSMA = (values: number[], period: number): number[] => {
+    if (values.length < period) return [];
+
+    const sma: number[] = [];
+
+    for (let i = period - 1; i < values.length; i++) {
+        let sum = 0;
+        for (let j = i - period + 1; j <= i; j++) {
+            sum += values[j];
+        }
+        sma.push(sum / period);
+    }
+
+    return sma;
 };

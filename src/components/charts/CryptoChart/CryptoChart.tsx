@@ -1,5 +1,5 @@
 import Chart, { type ChartHandle, type ChartProps } from "@/components/Chart/Chart";
-import { CandlestickSeries, type SeriesDataItemTypeMap } from "lightweight-charts";
+import { CandlestickSeries, LineSeries, type SeriesDataItemTypeMap } from "lightweight-charts";
 import { forwardRef } from "react";
 
 type Props = Omit<ChartProps, "series"> & {
@@ -10,7 +10,6 @@ const CryptoChart = forwardRef(
     ({ options, series }: Props, ref: React.ForwardedRef<ChartHandle>) => {
         const { layout, grid, timeScale, crosshair, rightPriceScale, ...otherOptionsProps } =
             options || {};
-
         return (
             <Chart
                 ref={ref}
@@ -24,6 +23,15 @@ const CryptoChart = forwardRef(
                             borderVisible: false,
                             wickUpColor: "#26a69a",
                             wickDownColor: "#ef5350",
+                        },
+                    },
+                    {
+                        definition: LineSeries,
+                        data: [],
+                        options: {
+                            color: "#ff9800",
+                            lineWidth: 2,
+                            priceLineVisible: false,
                         },
                     },
                 ]}

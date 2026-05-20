@@ -9,13 +9,14 @@ type Props = {
 
 const MFIChart = forwardRef(({ options, data }: Props, ref: React.ForwardedRef<ChartHandle>) => {
     const { grid, rightPriceScale, leftPriceScale, ...otherOptionsProps } = options || {};
+    const validData = data.filter((d) => !isNaN(d.value));
 
     return (
         <Chart
             series={[
                 {
                     definition: LineSeries,
-                    data,
+                    data: validData,
                     options: {
                         color: "#9c27b0",
                         lineWidth: 2,

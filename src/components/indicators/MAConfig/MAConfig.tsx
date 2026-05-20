@@ -27,6 +27,7 @@ const MAConfig = () => {
                     <Slider
                         defaultValue={[period]}
                         max={200}
+                        min={1}
                         step={1}
                         className="flex-1"
                         onValueChange={([value]) => changeMaPeriod(value)}

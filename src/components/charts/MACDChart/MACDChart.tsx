@@ -10,10 +10,11 @@ interface FormattedMACDData {
 }
 
 const formatMACDData = (data: MACDData[]): FormattedMACDData => {
+    const validData = data.filter((d) => !isNaN(d.macd) && !isNaN(d.signal));
     return {
-        macd: data.map((d) => ({ time: d.time, value: d.macd })),
-        signal: data.map((d) => ({ time: d.time, value: d.signal })),
-        histogram: data.map((d) => ({
+        macd: validData.map((d) => ({ time: d.time, value: d.macd })),
+        signal: validData.map((d) => ({ time: d.time, value: d.signal })),
+        histogram: validData.map((d) => ({
             time: d.time,
             value: d.histogram,
             color: d.histogram >= 0 ? "#26a69a" : "#ef5350",

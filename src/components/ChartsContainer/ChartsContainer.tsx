@@ -4,15 +4,21 @@ import MACDChart from "@/components/charts/MACDChart/MACDChart";
 import MFIChart from "@/components/charts/MFIChart/MFIChart";
 import { useBinanceCandles } from "@/hooks/useBinanceCandles";
 import { useChartsSync } from "@/hooks/useChartsSync";
+import { useMovingAverage } from "@/hooks/useMovingAverage";
 import { useOhlcSync } from "@/hooks/useOhlcSync";
 import { cn } from "@/lib/utils";
 import { useTradeStore } from "@/store/trade.store";
 import { calculateMACD, calculateMFI } from "@/utils/indicators";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 
 const ChartsContainer = () => {
     const indicators = useTradeStore((state) => state.indicators);
     const candles = useTradeStore((state) => state.candles);
+    const { isLoading } = useBinanceCandles();
+    const mainRef = useRef<ChartHandle>(null);
+    const macdRef = useRef<ChartHandle>(null);
+    const mfiRef = useRef<ChartHandle>(null);
+
     const macdData = calculateMACD(
         candles,
         indicators.macd.fast,
@@ -20,10 +26,7 @@ const ChartsContainer = () => {
         indicators.macd.signal,
     );
     const mfiData = calculateMFI(candles, indicators.mfi.period);
-    const { isLoading } = useBinanceCandles();
-    const mainRef = useRef<ChartHandle>(null);
-    const macdRef = useRef<ChartHandle>(null);
-    const mfiRef = useRef<ChartHandle>(null);
+    useMovingAverage(mainRef, candles, indicators.ma.period, indicators.ma.enabled);
     useChartsSync(mainRef, macdRef, mfiRef, [indicators]);
     useOhlcSync(mainRef, candles);
 

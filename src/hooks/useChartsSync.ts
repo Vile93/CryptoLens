@@ -2,10 +2,6 @@ import { useEffect } from "react";
 import type { ChartHandle } from "@/components/Chart/Chart";
 import type { IChartApi, LogicalRange } from "lightweight-charts";
 
-/**
- * Hook для синхронизации временной шкалы между несколькими графиками
- * Когда пользователь перемещается по одному графику, остальные автоматически синхронизируются
- */
 export const useChartsSync = (
     mainRef: React.RefObject<ChartHandle | null>,
     macdRef: React.RefObject<ChartHandle | null>,
@@ -27,7 +23,6 @@ export const useChartsSync = (
             const handler = (range: LogicalRange | null) => {
                 if (!range) return;
 
-                // Синхронизируем все остальные графики
                 charts.forEach((ch) => {
                     if (ch !== chart) {
                         ch.timeScale().setVisibleLogicalRange(range);
@@ -39,7 +34,6 @@ export const useChartsSync = (
             handlers.set(chart, handler);
         });
 
-        // Очистка подписок
         return () => {
             handlers.forEach((handler, chart) => {
                 chart.timeScale().unsubscribeVisibleLogicalRangeChange(handler);
