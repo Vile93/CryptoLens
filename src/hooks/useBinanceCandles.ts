@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
 import { binanceService } from "@/services/binance.service";
 import { useTradeStore } from "@/store/trade.store";
+import { useEffect, useRef } from "react";
 
 export const useBinanceCandles = () => {
     const symbol = useTradeStore((state) => state.market.symbol);
@@ -8,9 +8,9 @@ export const useBinanceCandles = () => {
     const unsubscribeRef = useRef<(() => void) | null>(null);
 
     useEffect(() => {
-        const { setLoading, setCandleData, updateLatestCandle } = useTradeStore.getState();
+        const { setLoading, setCandleData, updateCurrentPrice, updateLatestCandle } =
+            useTradeStore.getState();
         let isMounted = true;
-
         const loadData = async () => {
             try {
                 setLoading(true);
@@ -26,14 +26,10 @@ export const useBinanceCandles = () => {
 
                 const candles = await binanceService.getCandles(symbol, interval, 500);
                 if (!isMounted) return;
-
-                // Устанавливаем загруженные свечи в store
                 setCandleData(candles);
-
-                if (unsubscribeRef.current) {
-                    unsubscribeRef.current();
+                if (candles.length > 0) {
+                    updateCurrentPrice(candles[candles.length - 1]!.close);
                 }
-
                 unsubscribeRef.current = binanceService.subscribe(symbol, interval, (update) => {
                     if (isMounted) {
                         updateLatestCandle(update.data);

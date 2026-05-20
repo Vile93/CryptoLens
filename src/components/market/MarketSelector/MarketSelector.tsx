@@ -13,7 +13,7 @@ import { useTradeStore } from "@/store/trade.store";
 const MarketSelector = () => {
     const {
         changeInterval,
-        market: { interval },
+        market: { interval, symbol },
     } = useTradeStore();
 
     return (
@@ -28,22 +28,25 @@ const MarketSelector = () => {
                     <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 ml-0.5">
                         Торговая пара
                     </label>
-                    <Select defaultValue="BTC/USDT">
+                    <Select
+                        defaultValue={symbol}
+                        onValueChange={(value) => useTradeStore.getState().updateCurrency(value)}
+                    >
                         <SelectTrigger className="w-full font-mono bg-background/50 h-8 text-xs">
                             <SelectValue placeholder="Выберите пару" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
-                                <SelectItem value="BTC/USDT" className="text-xs">
+                                <SelectItem value="BTCUSDT" className="text-xs">
                                     BTC / USDT
                                 </SelectItem>
-                                <SelectItem value="ETH/USDT" className="text-xs">
+                                <SelectItem value="ETHUSDT" className="text-xs">
                                     ETH / USDT
                                 </SelectItem>
-                                <SelectItem value="SOL/USDT" className="text-xs">
+                                <SelectItem value="SOLUSDT" className="text-xs">
                                     SOL / USDT
                                 </SelectItem>
-                                <SelectItem value="TON/USDT" className="text-xs">
+                                <SelectItem value="TONUSDT" className="text-xs">
                                     TON / USDT
                                 </SelectItem>
                             </SelectGroup>

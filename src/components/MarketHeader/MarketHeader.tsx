@@ -3,10 +3,8 @@ import { intervalFormatter } from "@/utils/interval-formatter";
 
 const MarketHeader = () => {
     const {
-        market: { change24h, ohlc, symbol, interval, currentPrice },
+        market: { ohlc, symbol, interval, currentPrice },
     } = useTradeStore();
-    const changeColor = change24h < 0 ? "text-green-500" : "text-red-500";
-    const priceChange = (currentPrice * change24h) / 100;
 
     return (
         <div className="flex items-center justify-between h-12 px-1">
@@ -20,14 +18,7 @@ const MarketHeader = () => {
                 <div className="h-6 w-px bg-border mx-1" />
                 <div className="flex items-baseline gap-3">
                     <span className="text-3xl font-mono font-bold tracking-tight">
-                        {currentPrice.toFixed(2)}
-                    </span>
-                    <span className={`text-lg font-bold ${changeColor}`}>
-                        {change24h > 0 ? "+" : ""}
-                        {change24h.toFixed(2)}%
-                    </span>
-                    <span className={`text-sm text-foreground font-semibold ${changeColor}`}>
-                        ({priceChange >= 0 ? "+" : "-"}${priceChange.toFixed(2)})
+                        {currentPrice.toFixed(2)}$
                     </span>
                 </div>
             </div>

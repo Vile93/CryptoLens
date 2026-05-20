@@ -44,7 +44,9 @@ class BinanceService {
     private static readonly REST_BASE = "https://api.binance.com/api/v3";
     private static readonly WS_BASE = "wss://stream.binance.com:9443/ws";
     private ws: WebSocket | null = null;
-    private callbacks: Map<string, CandleCallback[]> = new Map();
+    private currentKey: string | null = null;
+    private currentCallback: CandleCallback | null = null;
+    private currentSymbol: string | null = null;
     private wsUrl: string | null = null;
 
     async getCandles(
@@ -90,41 +92,45 @@ class BinanceService {
 
     subscribe(symbol: string, interval: number, callback: CandleCallback): () => void {
         const key = `${symbol}_${interval}`;
-        if (!this.callbacks.has(key)) {
-            this.callbacks.set(key, []);
-        }
-        this.callbacks.get(key)!.push(callback);
-        if (this.callbacks.size === 1 || !this.ws || this.ws.readyState !== WebSocket.OPEN) {
+
+        if (this.currentKey !== key) {
+            this.disconnectWebSocket();
+            this.currentSymbol = symbol;
+            this.currentKey = key;
+            this.currentCallback = callback;
             this.connectWebSocket(symbol);
         }
         return () => {
-            const callbacks = this.callbacks.get(key);
-            if (callbacks) {
-                const index = callbacks.indexOf(callback);
-                if (index > -1) {
-                    callbacks.splice(index, 1);
-                }
-                if (callbacks.length === 0) {
-                    this.callbacks.delete(key);
-                }
-            }
-            if (this.callbacks.size === 0) {
-                this.disconnectWebSocket();
-            }
+            this.disconnectWebSocket();
+            this.currentKey = null;
+            this.currentCallback = null;
+            this.currentSymbol = null;
         };
     }
 
     private connectWebSocket(symbol: string): void {
-        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        if (this.ws && this.currentSymbol === symbol && this.ws.readyState === WebSocket.OPEN) {
             return;
         }
+        if (
+            this.ws &&
+            this.ws.readyState !== WebSocket.CLOSED &&
+            this.ws.readyState !== WebSocket.CLOSING
+        ) {
+            this.ws.close();
+            this.ws = null;
+        }
 
+        this.currentSymbol = symbol;
         const streamName = `${symbol.toLowerCase()}@kline_1m`;
         this.wsUrl = `${BinanceService.WS_BASE}/${streamName}`;
-
         this.ws = new WebSocket(this.wsUrl);
-
-        this.ws.addEventListener("message", (event) => {
+        const currentWs = this.ws;
+        this.ws.onmessage = (event) => {
+            if (!currentWs || currentWs !== this.ws) {
+                console.warn("Received message for an old WebSocket connection, ignoring.");
+                return;
+            }
             try {
                 const message = JSON.parse(event.data as string);
 
@@ -145,63 +151,54 @@ class BinanceService {
                     close: parseFloat(kline.c as string),
                 };
 
-                // Отправляем всем подписчикам с корректным интервалом
-                this.callbacks.forEach((callbacks, key) => {
-                    const [, intervalStr] = key.split("_");
-                    const interval = parseInt(intervalStr);
-                    callbacks.forEach((callback) => {
-                        callback({
-                            symbol: message.s,
-                            interval: intervalStr,
-                            data: candleData,
-                        });
+                if (this.currentCallback && this.currentKey) {
+                    const [, intervalStr] = this.currentKey.split("_");
+                    this.currentCallback({
+                        symbol: message.s,
+                        interval: intervalStr,
+                        data: candleData,
                     });
-                });
+                }
             } catch (error) {
                 console.error("Failed to parse WebSocket message:", error);
             }
-        });
+        };
 
-        this.ws.addEventListener("error", (error) => {
+        this.ws.onerror = (error) => {
             console.error("WebSocket error:", error);
-        });
+        };
 
-        this.ws.addEventListener("close", () => {
+        this.ws.onclose = () => {
             console.log("WebSocket disconnected");
             this.ws = null;
-        });
+        };
     }
 
-    /**
-     * Отключиться от WebSocket
-     */
     private disconnectWebSocket(): void {
-        if (this.ws) {
+        if (!this.ws) return;
+        this.ws.onmessage = null;
+        this.ws.onopen = null;
+        this.ws.onerror = null;
+        this.ws.onclose = null;
+        try {
             this.ws.close();
-            this.ws = null;
+        } catch (error) {
+            console.error("Error while closing WebSocket:", error);
         }
+        this.ws = null;
         this.wsUrl = null;
     }
 
-    /**
-     * Получить поддерживаемые интервалы (в секундах)
-     */
     getSupportedIntervals(): number[] {
         return Object.keys(INTERVAL_MAP)
             .map((k) => parseInt(k))
             .sort((a, b) => a - b);
     }
 
-    /**
-     * Проверить, поддерживается ли интервал
-     */
     isIntervalSupported(interval: number): boolean {
         return interval in INTERVAL_MAP;
     }
 
-    /**
-     * Получить информацию об интервале
-     */
     getIntervalInfo(interval: number): { binance: string; seconds: number } | null {
         return INTERVAL_MAP[interval] || null;
     }

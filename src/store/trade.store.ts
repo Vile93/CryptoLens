@@ -13,9 +13,10 @@ type TradeStore = {
             close: number;
         };
         currentPrice: number;
-        change24h: number;
     };
     setMarket: (market: TradeStore["market"]) => void;
+    updateCurrentPrice: (price: number) => void;
+    updateCurrency: (currency: string) => void;
     candles: CandlestickData<Time>[];
     setCandleData: (candles: CandlestickData<Time>[]) => void;
     updateLatestCandle: (candle: CandlestickData<Time>) => void;
@@ -66,7 +67,6 @@ export const useTradeStore = create<TradeStore>()(
                     close: 0,
                 },
                 currentPrice: 60000,
-                change24h: 0,
             },
             candles: [],
             isLoading: false,
@@ -97,13 +97,23 @@ export const useTradeStore = create<TradeStore>()(
 
                 set(() => ({ candles: updated }));
 
-                // Обновляем OHLC при получении новых данных
-                get().changeOhlc({
-                    open: candle.open,
-                    high: candle.high,
-                    low: candle.low,
-                    close: candle.close,
-                });
+                get().updateCurrentPrice(candle.close);
+            },
+            updateCurrentPrice(price) {
+                set((state) => ({
+                    market: {
+                        ...state.market,
+                        currentPrice: price,
+                    },
+                }));
+            },
+            updateCurrency(currency) {
+                set((state) => ({
+                    market: {
+                        ...state.market,
+                        symbol: currency,
+                    },
+                }));
             },
             appendCandle(candle) {
                 const state = get();
