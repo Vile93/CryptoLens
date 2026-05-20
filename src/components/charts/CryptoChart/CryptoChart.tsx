@@ -2,28 +2,12 @@ import Chart, { type ChartHandle, type ChartProps } from "@/components/Chart/Cha
 import { CandlestickSeries, type SeriesDataItemTypeMap } from "lightweight-charts";
 import { forwardRef } from "react";
 
-// Генерируем реалистичные данные для крипто-графика
-const generateCandleData = (): SeriesDataItemTypeMap["Candlestick"][] => {
-    const data: SeriesDataItemTypeMap["Candlestick"][] = [];
-    let lastClose = 60000;
-
-    for (let i = 0; i < 200; i++) {
-        const time = new Date(2023, 0, i + 1).toISOString().split("T")[0];
-        const open = lastClose + (Math.random() - 0.5) * 500;
-        const close = open + (Math.random() - 0.5) * 1000;
-        const high = Math.max(open, close) + Math.random() * 300;
-        const low = Math.min(open, close) - Math.random() * 300;
-
-        data.push({ time, open, high, low, close });
-        lastClose = close;
-    }
-    return data;
+type Props = Omit<ChartProps, "series"> & {
+    series: SeriesDataItemTypeMap["Candlestick"][];
 };
 
-const MOCK_CANDLES = generateCandleData();
-
 const CryptoChart = forwardRef(
-    ({ options }: Partial<ChartProps>, ref: React.ForwardedRef<ChartHandle>) => {
+    ({ options, series }: Props, ref: React.ForwardedRef<ChartHandle>) => {
         const { layout, grid, timeScale, crosshair, rightPriceScale, ...otherOptionsProps } =
             options || {};
 
@@ -33,7 +17,7 @@ const CryptoChart = forwardRef(
                 series={[
                     {
                         definition: CandlestickSeries,
-                        data: MOCK_CANDLES,
+                        data: series,
                         options: {
                             upColor: "#26a69a",
                             downColor: "#ef5350",

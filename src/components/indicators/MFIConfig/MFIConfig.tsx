@@ -26,7 +26,8 @@ const MFIConfig = () => {
                 <div className="flex items-center gap-4">
                     <Slider
                         defaultValue={[period]}
-                        max={50}
+                        max={100}
+                        min={0}
                         step={1}
                         className="flex-1"
                         onValueChange={([value]) => changeMfiPeriod(value)}

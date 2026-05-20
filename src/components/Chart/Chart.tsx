@@ -51,7 +51,17 @@ const Chart = forwardRef(
             return () => {
                 chart.remove();
             };
-        }, [options, series]);
+        }, []);
+
+        useEffect(() => {
+            if (!seriesListRef.current) return;
+            series.forEach((config, index) => {
+                const s = seriesListRef.current?.[index];
+                if (s && config.data.length > 0) {
+                    s.setData(config.data);
+                }
+            });
+        }, [series]);
 
         return <div className="w-full h-full min-w-0 min-h-0" ref={containerRef}></div>;
     },

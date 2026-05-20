@@ -29,7 +29,8 @@ const MACDConfig = () => {
                     <div className="flex items-center gap-4">
                         <Slider
                             defaultValue={[fast]}
-                            max={50}
+                            max={15}
+                            min={5}
                             step={1}
                             className="flex-1"
                             onValueChange={([value]) => changeMacdFast(value)}
@@ -42,7 +43,8 @@ const MACDConfig = () => {
                     <div className="flex items-center gap-4">
                         <Slider
                             defaultValue={[slow]}
-                            max={100}
+                            max={40}
+                            min={20}
                             step={1}
                             className="flex-1"
                             onValueChange={([value]) => changeMacdSlow(value)}
@@ -55,7 +57,8 @@ const MACDConfig = () => {
                     <div className="flex items-center gap-4">
                         <Slider
                             defaultValue={[signal]}
-                            max={30}
+                            max={15}
+                            min={5}
                             step={1}
                             className="flex-1"
                             onValueChange={([value]) => changeMacdSignal(value)}

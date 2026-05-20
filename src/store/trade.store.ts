@@ -1,12 +1,27 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { CandlestickData, Time } from "lightweight-charts";
 
 type TradeStore = {
     market: {
         symbol: string;
-        interval: string;
+        interval: number;
+        ohlc: {
+            open: number;
+            high: number;
+            low: number;
+            close: number;
+        };
+        currentPrice: number;
+        change24h: number;
     };
-    setMarket: (symbol: string, interval: string) => void;
+    setMarket: (market: TradeStore["market"]) => void;
+    candles: CandlestickData<Time>[];
+    setCandleData: (candles: CandlestickData<Time>[]) => void;
+    updateLatestCandle: (candle: CandlestickData<Time>) => void;
+    appendCandle: (candle: CandlestickData<Time>) => void;
+    isLoading: boolean;
+    setLoading: (loading: boolean) => void;
     indicators: {
         ma: {
             period: number;
@@ -25,6 +40,8 @@ type TradeStore = {
     };
     setMa: (period: number, enabled: boolean) => void;
     toggleMa: () => void;
+    changeOhlc: (ohlc: { open: number; high: number; low: number; close: number }) => void;
+    changeInterval: (interval: number) => void;
     changeMaPeriod: (period: number) => void;
     setMacd: (fast: number, slow: number, signal: number, enabled: boolean) => void;
     changeMacdFast: (fast: number) => void;
@@ -41,7 +58,82 @@ export const useTradeStore = create<TradeStore>()(
         (set, get) => ({
             market: {
                 symbol: "BTCUSDT",
-                interval: "1h",
+                interval: 3600,
+                ohlc: {
+                    open: 0,
+                    high: 0,
+                    low: 0,
+                    close: 0,
+                },
+                currentPrice: 60000,
+                change24h: 0,
+            },
+            candles: [],
+            isLoading: false,
+            setCandleData(candles) {
+                set(() => ({ candles }));
+            },
+            updateLatestCandle(candle) {
+                const state = get();
+                if (state.candles.length === 0) {
+                    set(() => ({ candles: [candle] }));
+                    return;
+                }
+
+                const updated = [...state.candles];
+                const lastCandle = updated[updated.length - 1]!;
+
+                // Если это обновление текущей свечи (одинаковое время)
+                if (lastCandle.time === candle.time) {
+                    updated[updated.length - 1] = candle;
+                } else {
+                    // Если это новая свеча
+                    updated.push(candle);
+                    // Ограничиваем размер массива чтобы не использовать слишком много памяти
+                    if (updated.length > 1000) {
+                        updated.shift();
+                    }
+                }
+
+                set(() => ({ candles: updated }));
+
+                // Обновляем OHLC при получении новых данных
+                get().changeOhlc({
+                    open: candle.open,
+                    high: candle.high,
+                    low: candle.low,
+                    close: candle.close,
+                });
+            },
+            appendCandle(candle) {
+                const state = get();
+                const updated = [...state.candles, candle];
+
+                // Ограничиваем размер массива
+                if (updated.length > 1000) {
+                    updated.shift();
+                }
+
+                set(() => ({ candles: updated }));
+            },
+            setLoading(loading) {
+                set(() => ({ isLoading: loading }));
+            },
+            changeOhlc(ohlc) {
+                const { setMarket, market } = get();
+                setMarket({
+                    ...market,
+                    ohlc: {
+                        open: ohlc.open ?? 0,
+                        high: ohlc.high ?? 0,
+                        low: ohlc.low ?? 0,
+                        close: ohlc.close ?? 0,
+                    },
+                });
+            },
+            changeInterval(interval) {
+                const { setMarket, market } = get();
+                setMarket({ ...market, interval });
             },
             indicators: {
                 ma: {
@@ -98,12 +190,9 @@ export const useTradeStore = create<TradeStore>()(
                 const { setMa } = get();
                 setMa(period, get().indicators.ma.enabled);
             },
-            setMarket(symbol, interval) {
+            setMarket(market) {
                 set(() => ({
-                    market: {
-                        symbol,
-                        interval,
-                    },
+                    market,
                 }));
             },
             toggleMa() {

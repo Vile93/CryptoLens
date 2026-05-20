@@ -8,8 +8,11 @@ import {
     SelectItem,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTradeStore } from "@/store/trade.store";
 
 const MarketSelector = () => {
+    const { changeInterval } = useTradeStore();
+
     return (
         <Card className="bg-muted/20 border-border/40 overflow-hidden">
             <CardHeader className="px-3 py-1 border-b border-border/40 bg-muted/10">
@@ -49,34 +52,38 @@ const MarketSelector = () => {
                     <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 ml-0.5">
                         Таймфрейм
                     </label>
-                    <Tabs defaultValue="1H" className="w-full">
+                    <Tabs
+                        defaultValue="3600"
+                        className="w-full"
+                        onValueChange={(interval) => changeInterval(Number(interval))}
+                    >
                         <TabsList className="grid grid-cols-5 w-full bg-background/50 h-7 p-0.5">
                             <TabsTrigger
-                                value="1M"
+                                value="60"
                                 className="text-[9px] h-6 uppercase font-bold px-0"
                             >
                                 1м
                             </TabsTrigger>
                             <TabsTrigger
-                                value="5M"
+                                value="300"
                                 className="text-[9px] h-6 uppercase font-bold px-0"
                             >
                                 5м
                             </TabsTrigger>
                             <TabsTrigger
-                                value="15M"
+                                value="900"
                                 className="text-[9px] h-6 uppercase font-bold px-0"
                             >
                                 15м
                             </TabsTrigger>
                             <TabsTrigger
-                                value="1H"
+                                value="3600"
                                 className="text-[9px] h-6 uppercase font-bold px-0"
                             >
                                 1ч
                             </TabsTrigger>
                             <TabsTrigger
-                                value="1D"
+                                value="86400"
                                 className="text-[9px] h-6 uppercase font-bold px-0"
                             >
                                 1д
