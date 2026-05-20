@@ -9,7 +9,7 @@
         "lint": "eslint .",
         "preview": "vite preview",
         "host": "vite --host",
-        "deploy": "gh-pages -d dist"
+        "deploy": "npm run build && gh-pages -d dist"
     },
     "dependencies": {
         "@fontsource-variable/geist": "^5.2.9",
