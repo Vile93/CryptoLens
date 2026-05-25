@@ -91,6 +91,11 @@ class BinanceService {
     }
 
     subscribe(symbol: string, interval: number, callback: CandleCallback): () => void {
+        const intervalInfo = INTERVAL_MAP[interval];
+        if (!intervalInfo) {
+            throw new Error(`Unsupported interval: ${interval} seconds`);
+        }
+
         const key = `${symbol}_${interval}`;
 
         if (this.currentKey !== key) {
@@ -98,7 +103,7 @@ class BinanceService {
             this.currentSymbol = symbol;
             this.currentKey = key;
             this.currentCallback = callback;
-            this.connectWebSocket(symbol);
+            this.connectWebSocket(symbol, intervalInfo.binance);
         }
         return () => {
             this.disconnectWebSocket();
@@ -108,7 +113,7 @@ class BinanceService {
         };
     }
 
-    private connectWebSocket(symbol: string): void {
+    private connectWebSocket(symbol: string, interval: string): void {
         if (this.ws && this.currentSymbol === symbol && this.ws.readyState === WebSocket.OPEN) {
             return;
         }
@@ -122,7 +127,7 @@ class BinanceService {
         }
 
         this.currentSymbol = symbol;
-        const streamName = `${symbol.toLowerCase()}@kline_1m`;
+        const streamName = `${symbol.toLowerCase()}@kline_${interval}`;
         this.wsUrl = `${BinanceService.WS_BASE}/${streamName}`;
         this.ws = new WebSocket(this.wsUrl);
         const currentWs = this.ws;

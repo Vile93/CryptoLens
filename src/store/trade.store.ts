@@ -66,7 +66,7 @@ export const useTradeStore = create<TradeStore>()(
                     low: 0,
                     close: 0,
                 },
-                currentPrice: 60000,
+                currentPrice: 0,
             },
             candles: [],
             isLoading: false,
